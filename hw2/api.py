@@ -52,8 +52,7 @@ class AbstractField(abc.ABC):
 class CharField(AbstractField):
 
     def __init__(self, required=False, nullable=True):
-        self.required = required
-        self.nullable = nullable
+        super().__init__(required, nullable)
 
     def validate(self, value):
         if not self.nullable and value is None:
@@ -71,8 +70,7 @@ class CharField(AbstractField):
 class ArgumentsField(AbstractField):
 
     def __init__(self, required=False, nullable=False):
-        self.required = required
-        self.nullable = nullable
+        super().__init__(required, nullable)
 
     def validate(self, value):
         if not self.nullable and value is None:
@@ -90,8 +88,7 @@ class ArgumentsField(AbstractField):
 class EmailField(AbstractField):
 
     def __init__(self, required=False, nullable=False):
-        self.required = required
-        self.nullable = nullable
+        super().__init__(required, nullable)
 
     def validate(self, value):
         if not self.nullable and value is None:
@@ -112,8 +109,7 @@ class EmailField(AbstractField):
 class PhoneField(AbstractField):
 
     def __init__(self, required=False, nullable=False):
-        self.required = required
-        self.nullable = nullable
+        super().__init__(required, nullable)
 
     def validate(self, value):
         if not self.nullable and value is None:
@@ -138,8 +134,7 @@ class PhoneField(AbstractField):
 class DateField(AbstractField):
 
     def __init__(self, required=False, nullable=False):
-        self.required = required
-        self.nullable = nullable
+        super().__init__(required, nullable)
 
     def validate(self, value):
         if not self.nullable and value is None:
@@ -162,8 +157,7 @@ class DateField(AbstractField):
 class BirthDayField(AbstractField):
 
     def __init__(self, required=False, nullable=False):
-        self.required = required
-        self.nullable = nullable
+        super().__init__(required, nullable)
 
     def validate(self, value):
         if not self.nullable and value is None:
@@ -195,8 +189,7 @@ class BirthDayField(AbstractField):
 class GenderField(AbstractField):
 
     def __init__(self, required=False, nullable=False):
-        self.required = required
-        self.nullable = nullable
+        super().__init__(required, nullable)
 
     def validate(self, value):
         if not self.nullable and value is None:
@@ -221,8 +214,7 @@ class GenderField(AbstractField):
 class ClientIDsField(AbstractField):
 
     def __init__(self, required=False, nullable=False):
-        self.required = required
-        self.nullable = nullable
+        super().__init__(required, nullable)
 
     def validate(self, value):
         if not self.nullable and value is None:
