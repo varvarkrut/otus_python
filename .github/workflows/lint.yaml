@@ -34,7 +34,7 @@ jobs:
       run: |
         cd hw1
         python -m pytest
-    - name: Test hw2
+    - name: Test hw3
       run: |
-        cd hw2
+        cd hw3
         python -m unittest test.py
