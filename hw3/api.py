@@ -40,7 +40,6 @@ GENDERS = {
 
 
 class AbstractField(abc.ABC):
-
     def __init__(self, required=False, nullable=False):
         self.required = required
         self.nullable = nullable
@@ -50,152 +49,138 @@ class AbstractField(abc.ABC):
 
 
 class CharField(AbstractField):
-
     def __init__(self, required=False, nullable=True):
         super().__init__(required, nullable)
 
     def validate(self, value):
         if not self.nullable and value is None:
-            raise ValueError(f'{type(self).__name__} Value must be not None')
+            raise ValueError(f"{type(self).__name__} Value must be not None")
         if self.required and value is None:
-            raise ValueError(f'{type(self).__name__} Value must be not None')
+            raise ValueError(f"{type(self).__name__} Value must be not None")
         if not value:
             return value
         if not isinstance(value, str):
-            raise ValueError('Value must be string')
+            raise ValueError("Value must be string")
         else:
             return value
 
 
 class ArgumentsField(AbstractField):
-
     def __init__(self, required=False, nullable=False):
         super().__init__(required, nullable)
 
     def validate(self, value):
         if not self.nullable and value is None:
-            raise ValueError(f'{type(self).__name__} Value must be not None')
+            raise ValueError(f"{type(self).__name__} Value must be not None")
         if self.required and value is None:
-            raise ValueError(f'{type(self).__name__} Value must be not None')
+            raise ValueError(f"{type(self).__name__} Value must be not None")
         if not value:
             return value
         if not isinstance(value, dict):
-            raise ValueError('Arguments error. Value must be dict')
+            raise ValueError("Arguments error. Value must be dict")
         else:
             return value
 
 
 class EmailField(AbstractField):
-
     def __init__(self, required=False, nullable=False):
         super().__init__(required, nullable)
 
     def validate(self, value):
         if not self.nullable and value is None:
-            raise ValueError(f'{type(self).__name__} Value must be not None')
+            raise ValueError(f"{type(self).__name__} Value must be not None")
         if self.required and value is None:
-            raise ValueError(f'{type(self).__name__} Value must be not None')
+            raise ValueError(f"{type(self).__name__} Value must be not None")
         if not value:
             return value
         if not isinstance(value, str):
-            raise ValueError(
-                'Email field validate error. Value must be string')
-        if '@' not in value:
-            raise ValueError('Email field validate error. Value must be email')
+            raise ValueError("Email field validate error. Value must be string")
+        if "@" not in value:
+            raise ValueError("Email field validate error. Value must be email")
         else:
             return value
 
 
 class PhoneField(AbstractField):
-
     def __init__(self, required=False, nullable=False):
         super().__init__(required, nullable)
 
     def validate(self, value):
         if not self.nullable and value is None:
-            raise ValueError(f'{type(self).__name__} Value must be not None')
+            raise ValueError(f"{type(self).__name__} Value must be not None")
         if self.required and value is None:
-            raise ValueError(f'{type(self).__name__} Value must be not None')
+            raise ValueError(f"{type(self).__name__} Value must be not None")
         if not value:
             return value
         if len(str(value)) != 11:
-            raise ValueError(
-                'Phone field validate error. Value must be 11 digits')
+            raise ValueError("Phone field validate error. Value must be 11 digits")
         if not str(value).isdigit():
-            raise ValueError(
-                'Phone field validate error. Value must be digits')
-        if str(value)[0] != '7':
-            raise ValueError(
-                'Phone field validate error. Value must be start with 7')
+            raise ValueError("Phone field validate error. Value must be digits")
+        if str(value)[0] != "7":
+            raise ValueError("Phone field validate error. Value must be start with 7")
         else:
             return str(value)
 
 
 class DateField(AbstractField):
-
     def __init__(self, required=False, nullable=False):
         super().__init__(required, nullable)
 
     def validate(self, value):
         if not self.nullable and value is None:
-            raise ValueError(f'{type(self).__name__} Value must be not None')
+            raise ValueError(f"{type(self).__name__} Value must be not None")
         if self.required and value is None:
-            raise ValueError(f'{type(self).__name__} Value must be not None')
+            raise ValueError(f"{type(self).__name__} Value must be not None")
         if not value:
             return value
         if not isinstance(value, str):
-            raise ValueError('Value must be string')
+            raise ValueError("Value must be string")
         try:
-            datetime.datetime.strptime(value, '%d.%m.%Y')
+            datetime.datetime.strptime(value, "%d.%m.%Y")
         except ValueError as e:
-            raise ValueError(
-                'Date field validate error. Value must be date') from e
+            raise ValueError("Date field validate error. Value must be date") from e
         else:
             return value
 
 
 class BirthDayField(AbstractField):
-
     def __init__(self, required=False, nullable=False):
         super().__init__(required, nullable)
 
     def validate(self, value):
         if not self.nullable and value is None:
-            raise ValueError(f'{type(self).__name__} Value must be not None')
+            raise ValueError(f"{type(self).__name__} Value must be not None")
         if self.required and value is None:
-            raise ValueError(f'{type(self).__name__} Value must be not None')
+            raise ValueError(f"{type(self).__name__} Value must be not None")
         if not value:
             return value
         if not isinstance(value, str):
-            raise ValueError(
-                'Birthday field validate error. Value must be string')
+            raise ValueError("Birthday field validate error. Value must be string")
         try:
-            date = datetime.datetime.strptime(value, '%d.%m.%Y')
+            date = datetime.datetime.strptime(value, "%d.%m.%Y")
             if date > datetime.datetime.now():
-                raise ValueError(
-                    'Birthday field validate error. Value must be date')
+                raise ValueError("Birthday field validate error. Value must be date")
 
             delta = datetime.datetime.now() - date
             if delta.days > 25550:
                 raise ValueError(
-                    'Birthday field validate error. The delta cannot be more than 70 years'
+                    "Birthday field validate error. The delta cannot be more than 70 years"
                 )
         except ValueError as e:
-            raise ValueError('Birth day field validate error.') from e
+            raise ValueError("Birth day field validate error.") from e
         else:
             return value
 
 
 class GenderField(AbstractField):
-
     def __init__(self, required=False, nullable=False):
         super().__init__(required, nullable)
 
     def validate(self, value):
         if not self.nullable and value is None:
-            raise ValueError(f'{type(self).__name__} Value must be not None')
+            raise ValueError(f"{type(self).__name__} Value must be not None")
         if self.required and value is None:
-            raise ValueError(f'{type(self).__name__} Value must be not None')
+            raise ValueError(f"{type(self).__name__} Value must be not None")
         if not value:
             return value
         GENDERS = {
@@ -204,35 +189,32 @@ class GenderField(AbstractField):
             2: "female",
         }
         if value not in GENDERS:
-            raise ValueError(
-                'Gender field validate error. Value must be 0, 1 or 2')
+            raise ValueError("Gender field validate error. Value must be 0, 1 or 2")
 
         else:
             return value
 
 
 class ClientIDsField(AbstractField):
-
     def __init__(self, required=False, nullable=False):
         super().__init__(required, nullable)
 
     def validate(self, value):
         if not self.nullable and value is None:
-            raise ValueError(f'{type(self).__name__} Value must be not None')
+            raise ValueError(f"{type(self).__name__} Value must be not None")
         if self.required and value is None or not value:
-            raise ValueError(f'{type(self).__name__} Value must be not None')
+            raise ValueError(f"{type(self).__name__} Value must be not None")
         if not isinstance(value, list):
-            raise ValueError('Value must be list')
+            raise ValueError("Value must be list")
         if len(value) != 0:
             for i in value:
                 if not isinstance(i, int):
-                    raise ValueError('Value must be int')
+                    raise ValueError("Value must be int")
 
         return value
 
 
 class MetaRequest(type):
-
     def __init__(self, name, bases, dct):
         super(MetaRequest, self).__init__(name, bases, dct)
         self.fields = []
@@ -251,19 +233,18 @@ class ClientsInterestsRequest(metaclass=MetaRequest):
         self.is_admin = False
         self.interests = {}
         self._errors = False
-        context['nclients'] = 0
+        context["nclients"] = 0
         for field in self.fields:
             try:
-                setattr(self, field.name,
-                        field.validate(request.get(field.name)))
+                setattr(self, field.name, field.validate(request.get(field.name)))
             except ValueError as e:
                 self._errors = True
                 self.errors = e
 
         try:
-            context['nclients'] = len(self.client_ids)
+            context["nclients"] = len(self.client_ids)
         except TypeError as exc:
-            context['nclients'] = 0
+            context["nclients"] = 0
 
     def process_request(self, is_admin=False):
         if self._errors:
@@ -293,8 +274,7 @@ class OnlineScoreRequest(metaclass=MetaRequest):
             try:
                 if request.get(field.name) is not None:
                     ctx["has"].append(field.name)
-                setattr(self, field.name,
-                        field.validate(request.get(field.name)))
+                setattr(self, field.name, field.validate(request.get(field.name)))
             except ValueError as e:
                 self._errors = True
                 self.errors = e
@@ -310,14 +290,15 @@ class OnlineScoreRequest(metaclass=MetaRequest):
             return self.response, self.status_code
 
         self.response = {
-            "score":
-            get_score(store=None,
-                      phone=self.phone,
-                      email=self.email,
-                      birthday=self.birthday,
-                      gender=self.gender,
-                      first_name=self.first_name,
-                      last_name=self.last_name)
+            "score": get_score(
+                store=None,
+                phone=self.phone,
+                email=self.email,
+                birthday=self.birthday,
+                gender=self.gender,
+                first_name=self.first_name,
+                last_name=self.last_name,
+            )
         }
 
         if self.response is None:
@@ -330,8 +311,11 @@ class OnlineScoreRequest(metaclass=MetaRequest):
         return self.response, self.status_code
 
     def _validate_request(self):
-        valid_pairs = ((self.first_name, self.last_name),
-                       (self.phone, self.email), (self.gender, self.birthday))
+        valid_pairs = (
+            (self.first_name, self.last_name),
+            (self.phone, self.email),
+            (self.gender, self.birthday),
+        )
         for pair in valid_pairs:
             if pair[0] is not None and pair[1] is not None:
                 return
@@ -353,8 +337,9 @@ class MethodRequest(metaclass=MetaRequest):
         self.request_body = request["body"]
         for field in self.fields:
             try:
-                setattr(self, field.name,
-                        field.validate(self.request_body.get(field.name)))
+                setattr(
+                    self, field.name, field.validate(self.request_body.get(field.name))
+                )
             except ValueError as e:
                 self._errors = True
                 self.errors = e
@@ -374,23 +359,20 @@ class MethodRequest(metaclass=MetaRequest):
         elif request_method == "clients_interests":
             method_request = ClientsInterestsRequest(self.arguments, self.ctx)
         else:
-            return {
-                "code": INVALID_REQUEST,
-                "response": {
-                    "error": "Invalid method"
-                }
-            }
+            return {"code": INVALID_REQUEST, "response": {"error": "Invalid method"}}
         return method_request.process_request(self.is_admin)
 
 
 def check_auth(request):
     if request.get("login", "") == ADMIN_LOGIN:
-        digest = hashlib.sha512((datetime.datetime.now().strftime("%Y%m%d%H") +
-                                 ADMIN_SALT).encode()).hexdigest()
+        digest = hashlib.sha512(
+            (datetime.datetime.now().strftime("%Y%m%d%H") + ADMIN_SALT).encode()
+        ).hexdigest()
     else:
-        digest = hashlib.sha512((request['account'] + request['login'] +
-                                 SALT).encode()).hexdigest()
-    if digest == request['token']:
+        digest = hashlib.sha512(
+            (request["account"] + request["login"] + SALT).encode()
+        ).hexdigest()
+    if digest == request["token"]:
         return True
     return False
 
@@ -406,28 +388,26 @@ class MainHTTPHandler(BaseHTTPRequestHandler):
     store = None
 
     def get_request_id(self, headers):
-        return headers.get('HTTP_X_REQUEST_ID', uuid.uuid4().hex)
+        return headers.get("HTTP_X_REQUEST_ID", uuid.uuid4().hex)
 
     def do_POST(self):
         response, code = {}, OK
         context = {"request_id": self.get_request_id(self.headers)}
         request = None
         try:
-            data_string = self.rfile.read(int(self.headers['Content-Length']))
+            data_string = self.rfile.read(int(self.headers["Content-Length"]))
             request = json.loads(data_string)
         except:
             code = BAD_REQUEST
 
         if request:
             path = self.path.strip("/")
-            logging.info("%s: %s %s" %
-                         (self.path, data_string, context["request_id"]))
+            logging.info("%s: %s %s" % (self.path, data_string, context["request_id"]))
             if path in self.router:
                 try:
-                    response, code = self.router[path]({
-                        "body": request,
-                        "headers": self.headers
-                    }, context, self.store)
+                    response, code = self.router[path](
+                        {"body": request, "headers": self.headers}, context, self.store
+                    )
                 except Exception as e:
                     logging.exception("Unexpected error: %s" % e)
                     code = INTERNAL_ERROR
@@ -440,10 +420,7 @@ class MainHTTPHandler(BaseHTTPRequestHandler):
         if code not in ERRORS:
             r = {"response": response, "code": code}
         else:
-            r = {
-                "error": response or ERRORS.get(code, "Unknown Error"),
-                "code": code
-            }
+            r = {"error": response or ERRORS.get(code, "Unknown Error"), "code": code}
         context.update(r)
         logging.info(context)
         binary_response = json.dumps(r).encode("utf-8")
@@ -456,10 +433,12 @@ if __name__ == "__main__":
     op.add_option("-p", "--port", action="store", type=int, default=8080)
     op.add_option("-l", "--log", action="store", default=None)
     (opts, args) = op.parse_args()
-    logging.basicConfig(filename=opts.log,
-                        level=logging.INFO,
-                        format='[%(asctime)s] %(levelname).1s %(message)s',
-                        datefmt='%Y.%m.%d %H:%M:%S')
+    logging.basicConfig(
+        filename=opts.log,
+        level=logging.INFO,
+        format="[%(asctime)s] %(levelname).1s %(message)s",
+        datefmt="%Y.%m.%d %H:%M:%S",
+    )
     server = HTTPServer(("localhost", opts.port), MainHTTPHandler)
     logging.info("Starting server at %s" % opts.port)
     try:

@@ -30,6 +30,9 @@ jobs:
 #    - name: Lint with yapf
 #      run: |
 #        yapf -r --diff .
+    - name: Lint with black
+      run: |
+        black --check .
     - name: Test hw1
       run: |
         cd hw1
