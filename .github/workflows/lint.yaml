@@ -38,3 +38,9 @@ jobs:
       run: |
         cd hw3
         python -m unittest test.py
+    - name: Test hw4
+      run: |
+        cd hw4
+        pip install -r requirements.txt
+        docker-compose up -d
+        python -m unittest test.py
