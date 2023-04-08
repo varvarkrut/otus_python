@@ -4,12 +4,9 @@ import json
 import store
 
 
-def get_score(phone,
-              email,
-              birthday=None,
-              gender=None,
-              first_name=None,
-              last_name=None):
+def get_score(
+    phone, email, birthday=None, gender=None, first_name=None, last_name=None
+):
     key_parts = [
         first_name or "",
         last_name or "",
