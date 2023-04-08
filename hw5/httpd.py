@@ -1,9 +1,12 @@
+import argparse
+
 import tcp_server
 import datetime
 from urllib.parse import unquote
+
 BUFFER_SIZE = 1024
-SUPPORTED_HTTP_VERSIONS = ['HTTP/1.1', 'HTTP/1.0']
-HTTP_SEPARATOR = '\r\n\r\n'
+SUPPORTED_HTTP_VERSIONS = ["HTTP/1.1", "HTTP/1.0"]
+HTTP_SEPARATOR = "\r\n\r\n"
 
 OK = 200
 BAD_REQUEST = 400
@@ -11,41 +14,41 @@ FORBIDDEN = 403
 NOT_FOUND = 404
 NOT_ALLOWED = 405
 
-available_methods = ['GET', 'HEAD']
+available_methods = ["GET", "HEAD"]
 response_codes = {
-    200: 'OK',
-    400: 'Bad Request',
-    403: 'Forbidden',
-    404: 'Not Found',
-    405: 'Method Not Allowed'
+    200: "OK",
+    400: "Bad Request",
+    403: "Forbidden",
+    404: "Not Found",
+    405: "Method Not Allowed",
 }
 
 
 class HTTPServer(tcp_server.TCPServer):
-    def __init__(self, host, port, document_root=None):
-        super().__init__(host, port)
+    def __init__(self, host, port, document_root=None, workers=1):
+        super().__init__(host, port, workers)
         self.response_code = OK
         self.response_headers = None
         self.request_headers = None
         self.document_root = document_root or "./"
         self.content = None
-        self.basic_http_versoin = 'HTTP/1.1'
+        self.basic_http_versoin = "HTTP/1.1"
 
     def handle_client_connection(self, client_socket):
         while True:
             request = client_socket.recv(BUFFER_SIZE)
             if HTTP_SEPARATOR.encode() in request or not request:
                 break
-            print(f'Received {request}')
+            print(f"Received {request}")
         request = self._parse_request(request)
         response = self._handle_request(request)
         client_socket.send(response)
         client_socket.close()
 
     def _parse_request(self, request):
-        request = request.decode('utf-8')
-        request = request.split('\r\n')
-        request = request[0].split(' ')
+        request = request.decode("utf-8")
+        request = request.split("\r\n")
+        request = request[0].split(" ")
         if not request or len(request) != 3:
             self.response_code = BAD_REQUEST
             return self.handle_unknown_request()
@@ -57,12 +60,12 @@ class HTTPServer(tcp_server.TCPServer):
         if protocol not in SUPPORTED_HTTP_VERSIONS:
             self.response_code = NOT_ALLOWED
             return self.handle_unknown_request()
-        if protocol == 'HTTP/1.0':
-            self.basic_http_versoin = 'HTTP/1.0'
+        if protocol == "HTTP/1.0":
+            self.basic_http_versoin = "HTTP/1.0"
         match method:
-            case 'GET':
+            case "GET":
                 return self._handle_get(path)
-            case 'HEAD':
+            case "HEAD":
                 return self._handle_head(path)
             case _:
                 self.response_code = NOT_ALLOWED
@@ -70,52 +73,58 @@ class HTTPServer(tcp_server.TCPServer):
 
     def _handle_head(self, path):
         # check whether query string is present
-        if '?' in path:
-            path = path.split('?')[0]
+        if "?" in path:
+            path = path.split("?")[0]
         # check whether path ends with '/'
-        if path.endswith('/'):
-            path += 'index.html'
-        if path.startswith('/'):
+        if path.endswith("/"):
+            path += "index.html"
+        if path.startswith("/"):
             path = path[1:]
         body = self._handle_get_file(path)
         headers = self._get_headers()
-        response = f'{self.basic_http_versoin} {self.response_code} {response_codes[self.response_code]}\r\n{headers}\r\n'.encode()
+        response = f"{self.basic_http_versoin} {self.response_code} {response_codes[self.response_code]}\r\n{headers}\r\n".encode()
         return response
 
     def _handle_get(self, path):
         # check whether query string is present
-        if '?' in path:
-            path = path.split('?')[0]
+        if "?" in path:
+            path = path.split("?")[0]
         # check whether path ends with '/'
-        if path.endswith('/'):
-            path += 'index.html'
-        if path.startswith('/'):
+        if path.endswith("/"):
+            path += "index.html"
+        if path.startswith("/"):
             path = path[1:]
 
         # handle white spaces in path
 
         body = self._handle_get_file(path)
         headers = self._get_headers()
-        response = f'{self.basic_http_versoin} {self.response_code} {response_codes[self.response_code]} \r\n{headers}\r\n{body}'.encode()
+        response = f"{self.basic_http_versoin} {self.response_code} {response_codes[self.response_code]} \r\n{headers}\r\n{body}".encode()
         return response
 
     def _handle_get_file(self, path):
         # handle url encoded path
         path = unquote(path)
         # avoid path traversal
-        if '../' in path:
+        if "../" in path:
             self.response_code = FORBIDDEN
             return self.content
         try:
             # check whether file binary or text
-            if path.endswith('.jpg') or path.endswith('.png') or path.endswith('.gif') or path.endswith('.swf') or path.endswith('.ico')\
-                    or path.endswith('jpeg'):
-                with open(self.document_root + path, 'rb') as f:
+            if (
+                path.endswith(".jpg")
+                or path.endswith(".png")
+                or path.endswith(".gif")
+                or path.endswith(".swf")
+                or path.endswith(".ico")
+                or path.endswith("jpeg")
+            ):
+                with open(self.document_root + path, "rb") as f:
                     self.content = f.read()
                     self.response_code = OK
                     return self.content
 
-            with open(self.document_root + path, 'r') as f:
+            with open(self.document_root + path, "r") as f:
                 self.content = f.read()
                 self.response_code = OK
                 return self.content
@@ -130,60 +139,90 @@ class HTTPServer(tcp_server.TCPServer):
 
     def _calculate_content_length(self, content):
         try:
-            return len(content.encode('utf-8'))
+            return len(content.encode("utf-8"))
         except Exception:
             return len(content)
 
     def _get_date(self):
-        return datetime.datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')
+        return datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S GMT")
 
     def _get_content_type(self, path):
-        if path.endswith('.html'):
-            return 'text/html'
-        elif path.endswith('.css'):
-            return 'text/css'
-        elif path.endswith('.js'):
-            return 'application/javascript'
-        elif path.endswith('.jpg') or path.endswith('.jpeg'):
-            return 'image/jpeg'
-        elif path.endswith('.png'):
-            return 'image/png'
-        elif path.endswith('.gif'):
-            return 'image/gif'
-        elif path.endswith('.swf'):
-            return 'application/x-shockwave-flash'
+        if path.endswith(".html"):
+            return "text/html"
+        elif path.endswith(".css"):
+            return "text/css"
+        elif path.endswith(".js"):
+            return "application/javascript"
+        elif path.endswith(".jpg") or path.endswith(".jpeg"):
+            return "image/jpeg"
+        elif path.endswith(".png"):
+            return "image/png"
+        elif path.endswith(".gif"):
+            return "image/gif"
+        elif path.endswith(".swf"):
+            return "application/x-shockwave-flash"
         else:
-            return 'text/plain'
+            return "text/plain"
 
     def _get_server_info(self):
-        return 'Python/3.10 (MacOS)'
+        return "Python/3.10 (MacOS)"
 
     def _get_connection(self):
-        return 'close'
+        return "close"
 
     def _get_headers(self):
         headers = {
-            'Content-Type': self._get_content_type(self.path) if self.content else '',
-            'Content-Length': self._calculate_content_length(self.content) if self.content else 0,
-            'Date': self._get_date(),
-            'Server': self._get_server_info(),
-            'Connection': self._get_connection()
+            "Content-Type": self._get_content_type(self.path) if self.content else "",
+            "Content-Length": self._calculate_content_length(self.content)
+            if self.content
+            else 0,
+            "Date": self._get_date(),
+            "Server": self._get_server_info(),
+            "Connection": self._get_connection(),
         }
 
-        headers_string = ''.join(
-            f'{key}: {value}' + '\r\n' for key, value in headers.items()
+        headers_string = "".join(
+            f"{key}: {value}" + "\r\n" for key, value in headers.items()
         )
         return headers_string
 
     def handle_unknown_request(self):
         headers = self._get_headers()
         body = self.content
-        response = f'{self.basic_http_versoin} {self.response_code} {response_codes[self.response_code]}\r\n{headers}\r\n{body}'.encode()
+        response = f"{self.basic_http_versoin} {self.response_code} {response_codes[self.response_code]}\r\n{headers}\r\n{body}".encode()
         return response
 
 
-
-
-if __name__ == '__main__':
-    server = HTTPServer('127.0.0.1', 8090)
+if __name__ == "__main__":
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        "-r",
+        "--document_root",
+        help="Document root directory",
+        default="./",
+    )
+    argparser.add_argument(
+        "-p",
+        "--port",
+        help="Port number",
+        default=80,
+    )
+    argparser.add_argument(
+        "-w",
+        "--workers",
+        help="Number of workers",
+        default=6,
+    )
+    argparser.add_argument(
+        "-a",
+        "--address",
+        help="Address",
+        default="0.0.0.0",
+    )
+    args = argparser.parse_args()
+    host = args.address
+    port = args.port
+    document_root = args.document_root
+    workers = args.workers
+    server = HTTPServer(host, port, document_root, workers)
     server.serve_forever()
