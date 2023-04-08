@@ -1,0 +1,28 @@
+version: "3.4"
+
+services:
+  httpd:
+    build:
+        context: .
+        dockerfile: Dockerfiles/Dockerfile-app
+    container_name: httpd
+    restart: always
+    networks:
+        - hw5
+
+  tests:
+    build:
+        context: .
+        dockerfile: Dockerfiles/Dockerfile-test
+    container_name: tests
+    restart: always
+    command: python3 httptest.py || true
+    networks:
+        - hw5
+    depends_on:
+      - httpd
+
+
+networks:
+    hw5:
+        driver: bridge
