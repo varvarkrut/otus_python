@@ -1,9 +1,8 @@
 import redis
 
-pool = redis.ConnectionPool(host='localhost',
-                            port=6379,
-                            max_connections=10,
-                            socket_timeout=3)
+pool = redis.ConnectionPool(
+    host="localhost", port=6379, max_connections=10, socket_timeout=3
+)
 redis_client = redis.Redis(connection_pool=pool)
 
 

@@ -4,41 +4,43 @@ import pytest
 
 
 def test_report_making(create_log_file):
-    log_file_path = 'log/nginx-access-ui.log-111111.log'
+    log_file_path = "log/nginx-access-ui.log-111111.log"
     report_size = 10
     report = make_report(log_file_path, report_size)
     assert len(report) == report_size
-    assert report[0]['url'] == '/api/v2/banner/25020545'
-    assert report[0]['count'] == 1
-    assert report[0]['count_perc'] == 0.077
-    assert report[0]['time_avg'] == 0.738
-    assert report[0]['time_max'] == 0.738
-    assert report[0]['time_sum'] == 0.738
-    assert report[0]['time_perc'] == 18.313
-    assert report[0]['time_med'] == 0.738
+    assert report[0]["url"] == "/api/v2/banner/25020545"
+    assert report[0]["count"] == 1
+    assert report[0]["count_perc"] == 0.077
+    assert report[0]["time_avg"] == 0.738
+    assert report[0]["time_max"] == 0.738
+    assert report[0]["time_sum"] == 0.738
+    assert report[0]["time_perc"] == 18.313
+    assert report[0]["time_med"] == 0.738
 
 
 def test_report_making_with_empty_file(create_log_file):
-    log_file_path = 'log/test.log'
+    log_file_path = "log/test.log"
     report_size = 10
-    with open(log_file_path, 'w') as f:
-        f.write('')
+    with open(log_file_path, "w") as f:
+        f.write("")
     report = make_report(log_file_path, report_size)
     assert len(report) == 0
 
 
 def test_report_saving(create_log_file):
-    report = [{
-        'url': '/api/v2/banner/25020545',
-        'count': 1,
-        'count_perc': 0.077,
-        'time_avg': 0.738,
-        'time_max': 0.738,
-        'time_sum': 0.738,
-        'time_perc': 18.313,
-        'time_med': 0.738
-    }]
-    report_path = 'report.html'
+    report = [
+        {
+            "url": "/api/v2/banner/25020545",
+            "count": 1,
+            "count_perc": 0.077,
+            "time_avg": 0.738,
+            "time_max": 0.738,
+            "time_sum": 0.738,
+            "time_perc": 18.313,
+            "time_med": 0.738,
+        }
+    ]
+    report_path = "report.html"
     save_report(report, report_path)
     file_path = os.path.join(os.getcwd(), report_path)
     assert os.path.exists(file_path)
@@ -48,8 +50,7 @@ def test_report_saving(create_log_file):
 
 @pytest.fixture
 def create_log_file():
-
-    with open('log/nginx-access-ui.log-111111.log', 'w') as f:
+    with open("log/nginx-access-ui.log-111111.log", "w") as f:
         f.write(
             '1.196.116.32 -  - [29/Jun/2017:03:50:22 +0300] "GET /api/v2/banner/25019354 HTTP/1.1" 200 927 "-" "Lynx/2.8.8dev.9 libwww-FM/2.14 SSL-MM/1.4.1 GNUTLS/2.10.5" "-" "1498697422-2190034393-4708-9752759" "dc7161be3" 0.390\n'
             '1.99.174.176 3b81f63526fa8  - [29/Jun/2017:03:50:22 +0300] "GET /api/1/photogenic_banners/list/?server_name=WIN7RB4 HTTP/1.1" 200 12 "-" "Python-urllib/2.7" "-" "1498697422-32900793-4708-9752770" "-" 0.133\n'
