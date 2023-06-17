@@ -9,15 +9,19 @@ import glob
 import logging
 import collections
 from optparse import OptionParser
+
 # brew install protobuf
 # protoc  --python_out=. ./appsinstalled.proto
 # pip install protobuf
 import appsinstalled_pb2
+
 # pip install python-memcached
 import memcache
 
 NORMAL_ERR_RATE = 0.01
-AppsInstalled = collections.namedtuple("AppsInstalled", ["dev_type", "dev_id", "lat", "lon", "apps"])
+AppsInstalled = collections.namedtuple(
+    "AppsInstalled", ["dev_type", "dev_id", "lat", "lon", "apps"]
+)
 
 
 def dot_rename(path):
@@ -35,7 +39,9 @@ def insert_appsinstalled(memc_addr, appsinstalled, dry_run=False):
     packed = ua.SerializeToString()
     try:
         if dry_run:
-            logging.debug("%s - %s -> %s" % (memc_addr, key, str(ua).replace("\n", " ")))
+            logging.debug(
+                "%s - %s -> %s" % (memc_addr, key, str(ua).replace("\n", " "))
+            )
         else:
             memc = memcache.Client([memc_addr])
             memc.set(key, packed)
@@ -66,7 +72,6 @@ def parse_appsinstalled(line):
 
 def start_workers(opts):
     for fn in glob.iglob(opts.pattern):
-
         filesize = os.stat(fn).st_size
         chunk_size = filesize // 4
 
@@ -96,8 +101,8 @@ def main(options, start, end):
     }
     for fn in glob.iglob(options.pattern):
         processed = errors = 0
-        logging.info('Processing %s' % fn)
-        fd = gzip.open(fn, 'r')
+        logging.info("Processing %s" % fn)
+        fd = gzip.open(fn, "r")
         fd.seek(start)
         fd_lines = fd.readlines(end - start)
         for line in fd_lines:
@@ -129,12 +134,15 @@ def main(options, start, end):
         if err_rate < NORMAL_ERR_RATE:
             logging.info("Acceptable error rate (%s). Successfull load" % err_rate)
         else:
-            logging.error("High error rate (%s > %s). Failed load" % (err_rate, NORMAL_ERR_RATE))
+            logging.error(
+                "High error rate (%s > %s). Failed load" % (err_rate, NORMAL_ERR_RATE)
+            )
         fd.close()
         try:
             dot_rename(fn)
         except FileNotFoundError:
             pass
+
 
 def prototest():
     sample = "idfa\t1rfw452y52g2gq4g\t55.55\t42.42\t1423,43,567,3,7,23\ngaid\t7rfw452y52g2gq4g\t55.55\t42.42\t7423,424"
@@ -152,7 +160,7 @@ def prototest():
         assert ua == unpacked
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     op = OptionParser()
     op.add_option("-t", "--test", action="store_true", default=False)
     op.add_option("-l", "--log", action="store", default=None)
@@ -163,8 +171,12 @@ if __name__ == '__main__':
     op.add_option("--adid", action="store", default="127.0.0.1:33015")
     op.add_option("--dvid", action="store", default="127.0.0.1:33016")
     (opts, args) = op.parse_args()
-    logging.basicConfig(filename=opts.log, level=logging.INFO if not opts.dry else logging.DEBUG,
-                        format='[%(asctime)s] %(levelname).1s %(message)s', datefmt='%Y.%m.%d %H:%M:%S')
+    logging.basicConfig(
+        filename=opts.log,
+        level=logging.INFO if not opts.dry else logging.DEBUG,
+        format="[%(asctime)s] %(levelname).1s %(message)s",
+        datefmt="%Y.%m.%d %H:%M:%S",
+    )
     if opts.test:
         prototest()
         sys.exit(0)

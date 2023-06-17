@@ -8,15 +8,19 @@ import glob
 import logging
 import collections
 from optparse import OptionParser
+
 # brew install protobuf
 # protoc  --python_out=. ./appsinstalled.proto
 # pip install protobuf
 import appsinstalled_pb2
+
 # pip install python-memcached
 import memcache
 
 NORMAL_ERR_RATE = 0.01
-AppsInstalled = collections.namedtuple("AppsInstalled", ["dev_type", "dev_id", "lat", "lon", "apps"])
+AppsInstalled = collections.namedtuple(
+    "AppsInstalled", ["dev_type", "dev_id", "lat", "lon", "apps"]
+)
 
 
 def dot_rename(path):
@@ -36,7 +40,9 @@ def insert_appsinstalled(memc_addr, appsinstalled, dry_run=False):
     # @TODO retry and timeouts!
     try:
         if dry_run:
-            logging.debug("%s - %s -> %s" % (memc_addr, key, str(ua).replace("\n", " ")))
+            logging.debug(
+                "%s - %s -> %s" % (memc_addr, key, str(ua).replace("\n", " "))
+            )
         else:
             memc = memcache.Client([memc_addr])
             memc.set(key, packed)
@@ -75,8 +81,8 @@ def main(options):
     }
     for fn in glob.iglob(options.pattern):
         processed = errors = 0
-        logging.info('Processing %s' % fn)
-        fd = gzip.open(fn, 'r')
+        logging.info("Processing %s" % fn)
+        fd = gzip.open(fn, "r")
         fd_lines = fd.readlines()
         for line in fd_lines:
             line = line.decode()
@@ -108,7 +114,9 @@ def main(options):
         if err_rate < NORMAL_ERR_RATE:
             logging.info("Acceptable error rate (%s). Successfull load" % err_rate)
         else:
-            logging.error("High error rate (%s > %s). Failed load" % (err_rate, NORMAL_ERR_RATE))
+            logging.error(
+                "High error rate (%s > %s). Failed load" % (err_rate, NORMAL_ERR_RATE)
+            )
         v
         fd.close()
         dot_rename(fn)
@@ -130,7 +138,7 @@ def prototest():
         assert ua == unpacked
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     op = OptionParser()
     op.add_option("-t", "--test", action="store_true", default=False)
     op.add_option("-l", "--log", action="store", default=None)
@@ -141,8 +149,12 @@ if __name__ == '__main__':
     op.add_option("--adid", action="store", default="127.0.0.1:33015")
     op.add_option("--dvid", action="store", default="127.0.0.1:33016")
     (opts, args) = op.parse_args()
-    logging.basicConfig(filename=opts.log, level=logging.INFO if not opts.dry else logging.DEBUG,
-                        format='[%(asctime)s] %(levelname).1s %(message)s', datefmt='%Y.%m.%d %H:%M:%S')
+    logging.basicConfig(
+        filename=opts.log,
+        level=logging.INFO if not opts.dry else logging.DEBUG,
+        format="[%(asctime)s] %(levelname).1s %(message)s",
+        datefmt="%Y.%m.%d %H:%M:%S",
+    )
     if opts.test:
         prototest()
         sys.exit(0)
