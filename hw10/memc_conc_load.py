@@ -33,8 +33,6 @@ def insert_appsinstalled(memc_addr, appsinstalled, dry_run=False):
     key = "%s:%s" % (appsinstalled.dev_type, appsinstalled.dev_id)
     ua.apps.extend(appsinstalled.apps)
     packed = ua.SerializeToString()
-    # @TODO persistent connection
-    # @TODO retry and timeouts!
     try:
         if dry_run:
             logging.debug("%s - %s -> %s" % (memc_addr, key, str(ua).replace("\n", " ")))
@@ -66,9 +64,30 @@ def parse_appsinstalled(line):
     return AppsInstalled(dev_type, dev_id, lat, lon, apps)
 
 
+def start_workers(opts):
+    for fn in glob.iglob(opts.pattern):
+
+        filesize = os.stat(fn).st_size
+        chunk_size = filesize // 4
+
+        processes = []
+
+        try:
+            for i in range(4):
+                start = i * chunk_size
+                end = start + chunk_size if i < 3 else filesize
+                process = multiprocessing.Process(target=main, args=(opts, start, end))
+                process.start()
+                processes.append(process)
+
+            for process in processes:
+                process.join()
+
+        except Exception as e:
+            logging.exception(f"Unexpected error")
+
+
 def main(options, start, end):
-    counter = 0
-    _line = ''
     device_memc = {
         "idfa": options.idfa,
         "gaid": options.gaid,
@@ -80,10 +99,9 @@ def main(options, start, end):
         logging.info('Processing %s' % fn)
         fd = gzip.open(fn, 'r')
         fd.seek(start)
-        print("START DEBUG", start)
         fd_lines = fd.readlines(end - start)
         for line in fd_lines:
-            _line = line
+            print(line)
             line = line.decode()
             line = line.strip()
             if not line:
@@ -151,23 +169,4 @@ if __name__ == '__main__':
         prototest()
         sys.exit(0)
 
-    filename = str(opts.pattern)
-    filesize = os.stat(filename).st_size
-    chunk_size = filesize // 4
-
-    processes = []
-    logging.info("Memc loader started with options: %s" % opts)
-    try:
-        for i in range(4):
-            start = i * chunk_size
-            end = start + chunk_size if i < 3 else filesize
-            process = multiprocessing.Process(target=main, args=(opts, start, end))
-            process.start()
-            processes.append(process)
-
-        for process in processes:
-            process.join()
-
-    except Exception as e:
-        logging.exception("Unexpected error: %s" % e)
-        sys.exit(1)
+    start_workers(opts)
