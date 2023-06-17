@@ -37,7 +37,6 @@ def insert_appsinstalled(memc_addr, appsinstalled, dry_run=False):
     # @TODO retry and timeouts!
     try:
         if dry_run:
-            pdb.set_trace()
             logging.debug("%s - %s -> %s" % (memc_addr, key, str(ua).replace("\n", " ")))
         else:
             memc = memcache.Client([memc_addr])
@@ -67,7 +66,9 @@ def parse_appsinstalled(line):
     return AppsInstalled(dev_type, dev_id, lat, lon, apps)
 
 
-def main(options):
+def main(options, start, end):
+    counter = 0
+    _line = ''
     device_memc = {
         "idfa": options.idfa,
         "gaid": options.gaid,
@@ -79,8 +80,10 @@ def main(options):
         logging.info('Processing %s' % fn)
         fd = gzip.open(fn, 'r')
         fd.seek(start)
-        fd_lines = fd.readlines()
+        print("START DEBUG", start)
+        fd_lines = fd.readlines(end - start)
         for line in fd_lines:
+            _line = line
             line = line.decode()
             line = line.strip()
             if not line:
@@ -97,32 +100,23 @@ def main(options):
             ok = insert_appsinstalled(memc_addr, appsinstalled, options.dry)
             if ok:
                 processed += 1
+                counter = processed
             else:
                 errors += 1
         if not processed:
             fd.close()
             dot_rename(fn)
             continue
-
         err_rate = float(errors) / processed
         if err_rate < NORMAL_ERR_RATE:
             logging.info("Acceptable error rate (%s). Successfull load" % err_rate)
         else:
             logging.error("High error rate (%s > %s). Failed load" % (err_rate, NORMAL_ERR_RATE))
         fd.close()
-        dot_rename(fn)
-
-
-# def read_file(filename, start, end, queue):
-#     with open(filename, 'r') as file:
-#         # переходим на нужную позицию в файле
-#         file.seek(start)
-#
-#         # читаем часть файла
-#         chunk = file.read(end - start)
-
-
-
+        try:
+            dot_rename(fn)
+        except FileNotFoundError:
+            pass
 
 def prototest():
     sample = "idfa\t1rfw452y52g2gq4g\t55.55\t42.42\t1423,43,567,3,7,23\ngaid\t7rfw452y52g2gq4g\t55.55\t42.42\t7423,424"
@@ -157,25 +151,23 @@ if __name__ == '__main__':
         prototest()
         sys.exit(0)
 
-    filename = '.sample2.tsv.gz'
+    filename = str(opts.pattern)
     filesize = os.stat(filename).st_size
     chunk_size = filesize // 4
 
     processes = []
-
-    for i in range(4):
-        start = i * chunk_size
-        end = start + chunk_size if i < 3 else filesize
-        process = multiprocessing.Process(target=main, args=(opts))
-        process.start()
-        processes.append(process)
-
-    for process in processes:
-        process.join()
-
     logging.info("Memc loader started with options: %s" % opts)
     try:
-        main(opts)
+        for i in range(4):
+            start = i * chunk_size
+            end = start + chunk_size if i < 3 else filesize
+            process = multiprocessing.Process(target=main, args=(opts, start, end))
+            process.start()
+            processes.append(process)
+
+        for process in processes:
+            process.join()
+
     except Exception as e:
         logging.exception("Unexpected error: %s" % e)
         sys.exit(1)

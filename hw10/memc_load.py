@@ -36,7 +36,6 @@ def insert_appsinstalled(memc_addr, appsinstalled, dry_run=False):
     # @TODO retry and timeouts!
     try:
         if dry_run:
-            pdb.set_trace()
             logging.debug("%s - %s -> %s" % (memc_addr, key, str(ua).replace("\n", " ")))
         else:
             memc = memcache.Client([memc_addr])
@@ -67,6 +66,7 @@ def parse_appsinstalled(line):
 
 
 def main(options):
+    counter = 0
     device_memc = {
         "idfa": options.idfa,
         "gaid": options.gaid,
@@ -95,6 +95,8 @@ def main(options):
             ok = insert_appsinstalled(memc_addr, appsinstalled, options.dry)
             if ok:
                 processed += 1
+                counter = processed
+                print("PROCESSED", processed)
             else:
                 errors += 1
         if not processed:
@@ -107,6 +109,7 @@ def main(options):
             logging.info("Acceptable error rate (%s). Successfull load" % err_rate)
         else:
             logging.error("High error rate (%s > %s). Failed load" % (err_rate, NORMAL_ERR_RATE))
+        v
         fd.close()
         dot_rename(fn)
 
