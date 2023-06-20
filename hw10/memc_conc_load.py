@@ -23,6 +23,17 @@ AppsInstalled = collections.namedtuple(
     "AppsInstalled", ["dev_type", "dev_id", "lat", "lon", "apps"]
 )
 
+batch_size = 100
+
+
+def create_pool(opts):
+    return {
+        "idfa": memcache.Client([opts.idfa]),
+        "gaid": memcache.Client([opts.gaid]),
+        "adid": memcache.Client([opts.adid]),
+        "dvid": memcache.Client([opts.dvid]),
+    }
+
 
 def dot_rename(path):
     head, fn = os.path.split(path)
@@ -30,25 +41,28 @@ def dot_rename(path):
     os.rename(path, os.path.join(head, "." + fn))
 
 
-def insert_appsinstalled(memc_addr, appsinstalled, dry_run=False):
+def insert_appsinstalled(memc_conn, buffer, dry_run=False):
+    try:
+        if dry_run:
+            logging.debug(f"uploaded buffer {buffer}")
+        else:
+            memc = memc_conn
+            memc.set_multi(dict(buffer), time=100)
+    except Exception as e:
+        logging.exception("Cannot write to memc %s: %s" % (memc_conn, e))
+        return False
+    return True
+
+
+def serialize_appsinstalled(appsinstalled):
     ua = appsinstalled_pb2.UserApps()
     ua.lat = appsinstalled.lat
     ua.lon = appsinstalled.lon
     key = "%s:%s" % (appsinstalled.dev_type, appsinstalled.dev_id)
     ua.apps.extend(appsinstalled.apps)
     packed = ua.SerializeToString()
-    try:
-        if dry_run:
-            logging.debug(
-                "%s - %s -> %s" % (memc_addr, key, str(ua).replace("\n", " "))
-            )
-        else:
-            memc = memcache.Client([memc_addr])
-            memc.set(key, packed)
-    except Exception as e:
-        logging.exception("Cannot write to memc %s: %s" % (memc_addr, e))
-        return False
-    return True
+
+    return key, packed
 
 
 def parse_appsinstalled(line):
@@ -93,11 +107,12 @@ def start_workers(opts):
 
 
 def main(options, start, end):
-    device_memc = {
-        "idfa": options.idfa,
-        "gaid": options.gaid,
-        "adid": options.adid,
-        "dvid": options.dvid,
+    conn_pool = create_pool(options)
+    buffers = {
+        "idfa": [],
+        "gaid": [],
+        "adid": [],
+        "dvid": [],
     }
     for fn in glob.iglob(options.pattern):
         processed = errors = 0
@@ -115,17 +130,33 @@ def main(options, start, end):
             if not appsinstalled:
                 errors += 1
                 continue
-            memc_addr = device_memc.get(appsinstalled.dev_type)
-            if not memc_addr:
+            mem_conn = conn_pool.get(appsinstalled.dev_type)
+            if not mem_conn:
                 errors += 1
                 logging.error("Unknow device type: %s" % appsinstalled.dev_type)
                 continue
-            ok = insert_appsinstalled(memc_addr, appsinstalled, options.dry)
+            ok = serialize_appsinstalled(mem_conn)
             if ok:
                 processed += 1
-                counter = processed
+                if appsinstalled.dev_type == "idfa":
+                    buffers["idfa"].append(ok)
+                elif appsinstalled.dev_type == "gaid":
+                    buffers["gaid"].append(ok)
+                elif appsinstalled.dev_type == "adid":
+                    buffers["adid"].append(ok)
+                elif appsinstalled.dev_type == "dvid":
+                    buffers["dvid"].append(ok)
             else:
                 errors += 1
+
+            for buffer in buffers:
+                if len(buffer) == batch_size:
+                    mem_conn = conn_pool.get(buffer)
+                    insert_appsinstalled(mem_conn, buffer, options.dry)
+
+        for buffer in buffers:
+            mem_conn = conn_pool.get(buffer)
+            insert_appsinstalled(mem_conn, buffer, options.dry)
         if not processed:
             fd.close()
             dot_rename(fn)
